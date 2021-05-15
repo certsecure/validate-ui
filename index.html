@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>CodeSecu.re - Validate</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/10.2.0/jsrsasign-all-min.js"
+            integrity="sha512-BJ6MG+1p/Hl7FmzjsrQogJRk4gHAPkVc2f6bw/h3v6Yhfj4exB+81K1lgzbLAqhvcZ3uAd+A72Y+q/nEVWBCig=="
+            crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
+</head>
+<body>
+
+<div class="container pt-2">
+
+    <h1 class="pb-2 display-1">CodeSecu.re - Validate</h1>
+
+    <div id="intro">
+        <p>Welcome to the validation site for CodeSecu.re. Scan a QR code to validate someones certificate.</p>
+
+        <div class="alert alert-danger">CodeSecu.re is not a Identification service. Please validate this separately</div>
+    </div>
+
+    <div class="card" id="invalid-cert" style="display: none">
+        <div class="text-center">
+        <i class="bi-x-circle-fill" style="font-size: 20vh; color: red;"></i>
+        </div>
+
+        <div class="card-body pt-0">
+            <h5 class="card-title">Invalid Certificate</h5>
+            <p class="card-text">This certificate is not valid, this may be due to it expiring or not being a certificate authorised by CodeSecu.re</p>
+        </div>
+    </div>
+
+    <div class="card" id="valid-cert" style="display: none">
+        <div class="text-center">
+            <i class="bi-check-circle" style="font-size: 20vh; color: green;"></i>
+        </div>
+
+        <div class="card-body pt-0">
+            <h5 class="card-title"><span class="certificate-name">{Certificate Name}</span> <small style="color: darkgrey">from <span class="certificate-issuer">{issure}</span></small></h5>
+            <dl class="row mb-0">
+                <dt class="col-auto certificate-id-name">{Certificate Id Name}</dt>
+                <dd class="col-auto certificate-id">{Certificate Id}</dd>
+            </dl>
+            <p class="card-text certificate-description">{description}</p>
+        </div>
+    </div>
+
+</div>
+
+<script type="text/javascript">
+    let publicKey = "harry";
+
+    const setClassText = (className, text)=>{
+        Array.from(document.getElementsByClassName(className))
+            .forEach(e=>e.innerText = text)
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('certificate');
+
+    if(token) {
+
+        //?certificate=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiY2VydGlmaWNhdGUiOnsibmFtZSI6IkFkdmFuY2VkIEZpcnN0IEFpZGVyIiwiaXNzdWVyIjoiU3QuIEpvaG4gQW1idWxhbmNlIiwiZGVzY3JpcHRpb24iOiJBZHZhbmNlZCBGaXJzdCBBaWRlcnMgY2FuIGFjdCBhcyBjbGluaWNhbCBzdXBlcnZpc29ycyBhbmQgbWVudG9ycyB0byBmaXJzdCBhaWRlcnMuIEFzIGFuIEFkdmFuY2VkIEZpcnN0IEFpZGVyLCB5b3XigJlsbCByZWNlaXZlIGV4dGVuZGVkIHRyYWluaW5nIGluIGZpcnN0IGFpZCBza2lsbHMgZm9yIGV2ZW50cy4iLCJpZCI6IjU2NzM0IiwiaWROYW1lIjoiU0pBIElkIn0sImlhdCI6MTUxNjIzOTAyMiwiIjoiIn0.B2tBtUg6BsJ8mlvu0jYkmibl24LhD8t_qaP-sE-bmUk
+
+        const isValid = KJUR.jws.JWS.verifyJWT(token, publicKey, {alg: ["HS256"]});
+
+        document.getElementById('intro').style.display = 'none';
+
+        if (isValid) {
+            let parseJWT = KJUR.jws.JWS.parse(token);
+
+            setClassText('certificate-name', parseJWT.payloadObj.certificate.name)
+            setClassText('certificate-issuer', parseJWT.payloadObj.certificate.issuer)
+            setClassText('certificate-description', parseJWT.payloadObj.certificate.description)
+            setClassText('certificate-id', parseJWT.payloadObj.certificate.id)
+            setClassText('certificate-id-name', parseJWT.payloadObj.certificate.idName)
+
+            document.getElementById('valid-cert').style.display = 'block';
+        } else {
+            document.getElementById('invalid-cert').style.display = 'block';
+        }
+    }
+</script>
+
+</body>
+
+</html>
